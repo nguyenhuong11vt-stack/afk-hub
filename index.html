@@ -1,0 +1,963 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>AFK HUB</title>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;800&display=swap" rel="stylesheet">
+  <style>
+    /* CSS & VARIABLES */
+    :root {
+      --bg-dark: #0f172a;
+      --card-bg: rgba(30, 41, 59, 0.7);
+      --primary: #3b82f6;
+      --primary-hover: #2563eb;
+      --text: #f8fafc;
+      --text-muted: #94a3b8;
+      --danger: #ef4444;
+      --success: #10b981;
+      --glass-border: rgba(255, 255, 255, 0.1);
+    }
+    * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Poppins', sans-serif; }
+    body { background: var(--bg-dark); color: var(--text); overflow-x: hidden; min-height: 100vh; }
+    
+    /* UTILS */
+    .glass { background: var(--card-bg); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); border: 1px solid var(--glass-border); border-radius: 16px; }
+    .hidden { display: none !important; }
+    .text-center { text-align: center; }
+    .text-muted { color: var(--text-muted); font-size: 0.9rem; }
+    .flex { display: flex; }
+    .flex-col { display: flex; flex-direction: column; }
+    .items-center { align-items: center; }
+    .justify-between { justify-content: space-between; }
+    .justify-center { justify-content: center; }
+    .gap-4 { gap: 1rem; }
+    .gap-2 { gap: 0.5rem; }
+    .p-4 { padding: 1rem; }
+    
+    /* TYPOGRAPHY */
+    h1 { font-size: 2rem; font-weight: 800; text-transform: uppercase; letter-spacing: 2px; }
+    h2 { font-size: 1.5rem; margin-bottom: 1rem; }
+    
+    /* INPUTS & BUTTONS */
+    input { width: 100%; padding: 12px; margin-bottom: 12px; background: rgba(0,0,0,0.2); border: 1px solid var(--glass-border); color: #fff; border-radius: 8px; outline: none; }
+    input:focus { border-color: var(--primary); }
+    button { width: 100%; padding: 12px; border: none; border-radius: 8px; background: var(--primary); color: #fff; font-weight: 600; cursor: pointer; transition: 0.2s; }
+    button:hover { background: var(--primary-hover); transform: translateY(-2px); }
+    button:active { transform: translateY(0); }
+    button.danger { background: var(--danger); }
+    button.outline { background: transparent; border: 1px solid var(--primary); color: var(--primary); }
+    
+    /* LAYOUT */
+    #app { display: flex; min-height: 100vh; flex-direction: column; }
+    #main-content { flex: 1; padding: 20px; padding-bottom: 80px; max-width: 1000px; margin: 0 auto; width: 100%; }
+    
+    /* HEADER */
+    header { padding: 15px 20px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--glass-border); position: sticky; top: 0; z-index: 50; background: rgba(15, 23, 42, 0.8); backdrop-filter: blur(10px); }
+    .header-logo { font-weight: 800; font-size: 1.2rem; color: var(--primary); }
+    .header-user { font-weight: 600; display: flex; flex-direction: column; align-items: flex-end; }
+    .header-role { font-size: 0.75rem; padding: 2px 6px; border-radius: 4px; background: rgba(255,255,255,0.1); margin-top: 2px; }
+    .role-owner { color: #fbbf24; border: 1px solid #fbbf24; }
+    
+    /* NAVIGATION */
+    nav { position: fixed; bottom: 0; left: 0; right: 0; background: var(--card-bg); backdrop-filter: blur(10px); border-top: 1px solid var(--glass-border); display: flex; justify-content: space-around; padding: 10px; z-index: 100; }
+    nav button { background: transparent; color: var(--text-muted); flex: 1; padding: 8px 0; border-radius: 8px; display: flex; flex-direction: column; align-items: center; font-size: 0.8rem; font-weight: 400; }
+    nav button.active { color: var(--primary); font-weight: 600; }
+    nav button:hover { background: rgba(255,255,255,0.05); transform: none; }
+    nav span.icon { font-size: 1.2rem; margin-bottom: 4px; }
+    
+    @media(min-width: 768px) {
+      #app { flex-direction: row; }
+      header { display: none; } /* Hide mobile header */
+      nav { position: relative; width: 250px; flex-direction: column; justify-content: flex-start; border-top: none; border-right: 1px solid var(--glass-border); padding: 20px; background: transparent; height: 100vh; }
+      nav button { flex-direction: row; font-size: 1rem; padding: 15px; text-align: left; margin-bottom: 10px; }
+      nav span.icon { margin-right: 15px; margin-bottom: 0; }
+      #main-content { padding-bottom: 20px; }
+      .pc-header { display: block; margin-bottom: 30px; }
+    }
+    
+    /* CARDS & VIEWS */
+    .card { padding: 20px; margin-bottom: 20px; }
+    .big-timer { font-size: 3rem; font-weight: 800; text-align: center; margin: 20px 0; font-variant-numeric: tabular-nums; }
+    
+    /* RANKING */
+    .rank-item { display: flex; justify-content: space-between; align-items: center; padding: 15px; border-bottom: 1px solid rgba(255,255,255,0.05); }
+    .rank-item:last-child { border: none; }
+    .rank-pos { font-size: 1.5rem; font-weight: 800; width: 40px; }
+    .rank-pos.gold { color: #fbbf24; }
+    .rank-pos.silver { color: #94a3b8; }
+    .rank-pos.bronze { color: #b45309; }
+    
+    /* TOAST */
+    #toast-container { position: fixed; top: 20px; left: 50%; transform: translateX(-50%); z-index: 9999; display: flex; flex-direction: column; gap: 10px; }
+    .toast { padding: 12px 24px; border-radius: 8px; font-weight: 600; animation: slideDown 0.3s ease; box-shadow: 0 4px 12px rgba(0,0,0,0.5); }
+    .toast.success { background: var(--success); color: white; }
+    .toast.error { background: var(--danger); color: white; }
+    @keyframes slideDown { from { transform: translateY(-20px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+    
+    /* LOADING OVERLAY */
+    #loading { position: fixed; inset: 0; background: rgba(15, 23, 42, 0.8); z-index: 9999; display: flex; justify-content: center; align-items: center; }
+    .spinner { border: 4px solid rgba(255,255,255,0.1); border-left-color: var(--primary); border-radius: 50%; width: 40px; height: 40px; animation: spin 1s linear infinite; }
+    @keyframes spin { 100% { transform: rotate(360deg); } }
+    
+    /* FOOTER */
+    footer { text-align: center; padding: 30px; font-size: 0.8rem; color: var(--text-muted); }
+    
+    /* FLAPPY BIRD CANVAS */
+    #game-container { width: 100%; max-width: 400px; margin: 0 auto; position: relative; overflow: hidden; border-radius: 12px; }
+    canvas { display: block; width: 100%; background: #70c5ce; }
+    #game-ui { position: absolute; inset: 0; pointer-events: none; display: flex; flex-direction: column; justify-content: center; align-items: center; text-align: center; }
+    .game-score { position: absolute; top: 20px; font-size: 3rem; font-weight: 800; -webkit-text-stroke: 2px black; color: white; }
+    #game-over { background: rgba(0,0,0,0.8); padding: 20px; border-radius: 12px; pointer-events: auto; }
+    
+    .table-responsive { overflow-x: auto; }
+    table { width: 100%; border-collapse: collapse; margin-top: 10px; }
+    th, td { padding: 10px; text-align: left; border-bottom: 1px solid var(--glass-border); font-size: 0.9rem; }
+  </style>
+</head>
+<body>
+
+  <!-- LOADING -->
+  <div id="loading" class="hidden">
+    <div class="spinner"></div>
+  </div>
+
+  <!-- TOASTS -->
+  <div id="toast-container"></div>
+
+  <!-- AUTH SCREEN -->
+  <div id="auth-view" class="view" style="display: flex; justify-content: center; align-items: center; min-height: 100vh; padding: 20px;">
+    <div class="card glass" style="width: 100%; max-width: 400px;">
+      <h1 class="text-center" style="margin-bottom: 20px;">AFK HUB</h1>
+      
+      <!-- LOGIN FORM -->
+      <div id="login-form">
+        <input type="text" id="log-user" placeholder="Username" autocomplete="off">
+        <input type="password" id="log-pass" placeholder="Password">
+        <button onclick="handleLogin()">ĐĂNG NHẬP</button>
+        <div class="text-center" style="margin-top: 15px;">
+          <a href="#" onclick="toggleAuth()" class="text-muted">Chưa có tài khoản? Tạo ngay</a>
+        </div>
+      </div>
+      
+      <!-- REGISTER FORM -->
+      <div id="register-form" class="hidden">
+        <input type="text" id="reg-user" placeholder="Username (Không viết hoa, không dấu)">
+        <input type="password" id="reg-pass" placeholder="Password">
+        <input type="text" id="reg-display" placeholder="Display Name (VD: Mayo)">
+        <input type="text" id="reg-symbol" placeholder="Symbol (VD: ★, 👑, ◆)" maxlength="2">
+        <button onclick="handleRegister()">TẠO TÀI KHOẢN</button>
+        <div class="text-center" style="margin-top: 15px;">
+          <a href="#" onclick="toggleAuth()" class="text-muted">Đã có tài khoản? Đăng nhập</a>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- MAIN APP -->
+  <div id="app" class="hidden">
+    
+    <!-- MOBILE HEADER -->
+    <header>
+      <div class="header-logo">AFK HUB</div>
+      <div class="header-user">
+        <span id="mh-name">User</span>
+        <span id="mh-role" class="header-role">MEMBER</span>
+      </div>
+    </header>
+
+    <!-- NAVIGATION (Sidebar on PC, Bottom Nav on Mobile) -->
+    <nav>
+      <div class="pc-header hidden text-center" style="margin-bottom: 40px;">
+        <h1 style="color: var(--primary);">AFK HUB</h1>
+        <div style="margin-top: 10px;">
+          <div id="pc-name" style="font-weight: 800; font-size: 1.2rem;">User</div>
+          <div id="pc-role" class="header-role" style="display: inline-block; margin-top: 5px;">MEMBER</div>
+        </div>
+      </div>
+      <button onclick="switchView('home')" id="nav-home" class="active"><span class="icon">🏠</span> <span>HOME</span></button>
+      <button onclick="switchView('ranking')" id="nav-ranking"><span class="icon">🏆</span> <span>RANKING</span></button>
+      <button onclick="switchView('games')" id="nav-games"><span class="icon">🎮</span> <span>GAMES</span></button>
+      <button onclick="switchView('profile')" id="nav-profile"><span class="icon">👤</span> <span>PROFILE</span></button>
+      <button onclick="switchView('admin')" id="nav-admin" class="hidden"><span class="icon">⚙️</span> <span>ADMIN</span></button>
+    </nav>
+
+    <!-- CONTENT AREA -->
+    <div id="main-content">
+      
+      <!-- HOME / AFK VIEW -->
+      <div id="view-home" class="view">
+        <h2 class="text-center">🕐 AFK STATUS</h2>
+        <div class="card glass text-center flex-col items-center">
+          <div id="afk-status-text" class="text-muted" style="margin-bottom: 10px;">Chưa bắt đầu AFK</div>
+          <div id="afk-timer" class="big-timer">00:00:00</div>
+          <div style="width: 100%; max-width: 300px;">
+            <button id="btn-start-afk" onclick="startAFK()">BẮT ĐẦU AFK</button>
+            <button id="btn-stop-afk" class="danger hidden" onclick="stopAFK()">TÔI ĐÃ QUAY LẠI</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- RANKING VIEW -->
+      <div id="view-ranking" class="view hidden">
+        <div class="flex justify-between items-center" style="margin-bottom: 15px;">
+          <h2>🏆 AFK RANKING</h2>
+          <button onclick="loadRanking()" style="width: auto; padding: 8px 15px;">🔄 Refresh</button>
+        </div>
+        <div class="card glass" id="ranking-list">
+          <div class="text-center text-muted">Đang tải...</div>
+        </div>
+      </div>
+
+      <!-- GAMES VIEW -->
+      <div id="view-games" class="view hidden">
+        <h2>🎮 GAME CENTER</h2>
+        <div class="card glass flex justify-between items-center">
+          <div>
+            <h3 style="font-size: 1.2rem; margin-bottom: 5px;">🐦 Flappy Bird</h3>
+            <p class="text-muted">Bay càng lâu càng tốt</p>
+            <p style="margin-top: 10px; font-weight: 600;">BEST SCORE: <span id="game-best-score" style="color: var(--primary);">0</span></p>
+          </div>
+          <button onclick="openGame('flappy')" style="width: 100px;">PLAY</button>
+        </div>
+      </div>
+
+      <!-- GAME PLAY VIEW -->
+      <div id="view-play" class="view hidden">
+        <div class="flex justify-between items-center" style="margin-bottom: 10px;">
+          <button onclick="switchView('games')" style="width: auto; padding: 5px 15px;" class="outline">← QUAY LẠI</button>
+          <h2>🐦 FLAPPY BIRD</h2>
+          <button onclick="toggleSound()" style="width: auto; padding: 5px 15px;" id="btn-sound">🔊 ON</button>
+        </div>
+        <div id="game-container">
+          <canvas id="flappy-canvas"></canvas>
+          <div id="game-ui">
+            <div id="flappy-score" class="game-score hidden">0</div>
+            
+            <div id="flappy-start" style="pointer-events: auto;">
+              <h1 style="color: white; -webkit-text-stroke: 1px black;">FLAPPY BIRD</h1>
+              <p style="color: white; margin-bottom: 20px;">Chạm hoặc Space để nhảy</p>
+              <button onclick="startGame()">BẮT ĐẦU</button>
+            </div>
+            
+            <div id="flappy-over" class="hidden text-center">
+              <h2 style="color: var(--danger); font-weight: 800;">GAME OVER</h2>
+              <p style="color: white; font-size: 1.2rem;">Score: <span id="final-score">0</span></p>
+              <p style="color: white; margin-bottom: 15px;" class="text-muted">Best: <span id="over-best-score">0</span></p>
+              <button onclick="startGame()">PLAY AGAIN</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- PROFILE VIEW -->
+      <div id="view-profile" class="view hidden">
+        <h2>👤 PROFILE</h2>
+        <div class="card glass text-center">
+          <div style="font-size: 3rem; margin-bottom: 10px;" id="pro-symbol">★</div>
+          <h2 id="pro-display">Tên</h2>
+          <p class="text-muted">@<span id="pro-username">user</span></p>
+          <div id="pro-role" class="header-role" style="display: inline-block; margin: 10px 0;">MEMBER</div>
+        </div>
+        
+        <div class="card glass">
+          <h3 style="margin-bottom: 15px;">Thống kê AFK</h3>
+          <p>Tổng số phiên: <strong id="stat-sessions" style="float: right;">0</strong></p>
+          <hr style="border: 0; border-top: 1px solid var(--glass-border); margin: 10px 0;">
+          <p>AFK lâu nhất: <strong id="stat-longest" style="float: right;">00:00:00</strong></p>
+        </div>
+
+        <div class="card glass">
+          <h3 style="margin-bottom: 15px;">Lịch sử gần đây</h3>
+          <div id="profile-history" class="text-muted">Đang tải...</div>
+        </div>
+
+        <div class="card glass flex-col gap-4">
+          <h3 style="margin-bottom: 5px;">Cài đặt</h3>
+          <input type="text" id="edit-display" placeholder="Tên hiển thị mới">
+          <input type="text" id="edit-symbol" placeholder="Ký hiệu mới (1-2 ký tự)" maxlength="2">
+          <button onclick="saveProfile()" class="outline">LƯU THAY ĐỔI</button>
+          <button onclick="handleLogout()" class="danger" style="margin-top: 20px;">ĐĂNG XUẤT</button>
+        </div>
+      </div>
+
+      <!-- ADMIN VIEW -->
+      <div id="view-admin" class="view hidden">
+        <h2>⚙ ADMIN PANEL</h2>
+        
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 20px;">
+          <div class="card glass text-center" style="margin-bottom: 0;">
+            <div class="text-muted">Users</div>
+            <h2 id="ad-users">0</h2>
+          </div>
+          <div class="card glass text-center" style="margin-bottom: 0;">
+            <div class="text-muted">Đang AFK</div>
+            <h2 id="ad-afks">0</h2>
+          </div>
+          <div class="card glass text-center" style="margin-bottom: 0;">
+            <div class="text-muted">Tổng Phiên</div>
+            <h2 id="ad-sessions">0</h2>
+          </div>
+          <div class="card glass text-center" style="margin-bottom: 0;">
+            <div class="text-muted">Lượt Chơi</div>
+            <h2 id="ad-games">0</h2>
+          </div>
+        </div>
+
+        <div class="card glass">
+          <div class="flex justify-between items-center" style="margin-bottom: 15px;">
+            <h3>Quản lý Users</h3>
+            <button onclick="loadAdminUsers()" style="width: auto; padding: 5px 15px;" class="outline">Tải lại</button>
+          </div>
+          <div class="table-responsive">
+            <table>
+              <thead>
+                <tr>
+                  <th>User</th>
+                  <th>Role</th>
+                  <th>Hành động</th>
+                </tr>
+              </thead>
+              <tbody id="admin-user-list">
+                <tr><td colspan="3" class="text-center text-muted">Đang tải...</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- FOOTER -->
+      <footer>
+        <h2>AFK HUB</h2>
+        <p>AFK Ranking System</p>
+        <p style="margin-top: 10px;">Made by Gemini VN<br>Made in 26/9/2026</p>
+      </footer>
+
+    </div>
+  </div>
+
+  <script>
+    // ==========================================
+    // 1. STATE & UTILS
+    // ==========================================
+    const State = {
+      token: localStorage.getItem('afk_token'),
+      user: null,
+      afkStartTime: null,
+      afkInterval: null,
+      bestScore: 0
+    };
+
+    const escapeHTML = str => str.replace(/[&<>'"]/g, tag => ({
+      '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;'
+    }[tag] || tag));
+
+    const formatTime = ms => {
+      let seconds = Math.floor((ms / 1000) % 60);
+      let minutes = Math.floor((ms / (1000 * 60)) % 60);
+      let hours = Math.floor((ms / (1000 * 60 * 60)));
+      return [hours, minutes, seconds].map(v => v < 10 ? "0" + v : v).join(":");
+    };
+
+    const showToast = (msg, type = 'success') => {
+      const container = document.getElementById('toast-container');
+      const toast = document.createElement('div');
+      toast.className = `toast ${type}`;
+      toast.textContent = msg;
+      container.appendChild(toast);
+      setTimeout(() => { toast.style.opacity = '0'; setTimeout(() => toast.remove(), 300); }, 3000);
+    };
+
+    const loading = show => document.getElementById('loading').classList.toggle('hidden', !show);
+
+    // API Wrapper Promise
+    const api = (func, ...args) => new Promise((resolve, reject) => {
+      google.script.run
+        .withSuccessHandler(res => resolve(res))
+        .withFailureHandler(err => { showToast('Lỗi kết nối Server', 'error'); reject(err); })
+        [func](...args);
+    });
+
+    // ==========================================
+    // 2. INITIALIZATION & ROUTING
+    // ==========================================
+    window.onload = async () => {
+      if (State.token) {
+        loading(true);
+        const res = await api('checkAuth', State.token);
+        if (res.success) {
+          State.user = res.user;
+          initApp();
+        } else {
+          localStorage.removeItem('afk_token');
+          State.token = null;
+        }
+        loading(false);
+      }
+    };
+
+    function switchView(viewName) {
+      document.querySelectorAll('.view').forEach(el => el.classList.add('hidden'));
+      document.querySelectorAll('nav button').forEach(el => el.classList.remove('active'));
+      
+      document.getElementById(`view-${viewName}`).classList.remove('hidden');
+      const navBtn = document.getElementById(`nav-${viewName}`);
+      if(navBtn) navBtn.classList.add('active');
+
+      if (viewName === 'ranking') loadRanking();
+      if (viewName === 'profile') loadProfile();
+      if (viewName === 'admin') loadAdminData();
+    }
+
+    // ==========================================
+    // 3. AUTHENTICATION
+    // ==========================================
+    function toggleAuth() {
+      document.getElementById('login-form').classList.toggle('hidden');
+      document.getElementById('register-form').classList.toggle('hidden');
+    }
+
+    async function handleRegister() {
+      const u = document.getElementById('reg-user').value.trim();
+      const p = document.getElementById('reg-pass').value;
+      const d = document.getElementById('reg-display').value.trim();
+      const s = document.getElementById('reg-symbol').value.trim() || '★';
+
+      if(!u || !p || !d) return showToast('Vui lòng nhập đủ thông tin', 'error');
+      
+      loading(true);
+      const res = await api('registerUser', u, p, d, s);
+      loading(false);
+      
+      if(res.success) {
+        showToast(res.message);
+        toggleAuth();
+        document.getElementById('log-user').value = u;
+      } else {
+        showToast(res.message, 'error');
+      }
+    }
+
+    async function handleLogin() {
+      const u = document.getElementById('log-user').value.trim();
+      const p = document.getElementById('log-pass').value;
+
+      if(!u || !p) return showToast('Nhập đủ username và password', 'error');
+
+      loading(true);
+      const res = await api('loginUser', u, p);
+      loading(false);
+
+      if(res.success) {
+        State.token = res.token;
+        State.user = res.user;
+        localStorage.setItem('afk_token', res.token);
+        showToast('Đăng nhập thành công');
+        initApp();
+      } else {
+        showToast(res.message, 'error');
+      }
+    }
+
+    async function handleLogout() {
+      loading(true);
+      await api('logoutUser', State.token);
+      localStorage.removeItem('afk_token');
+      location.reload();
+    }
+
+    async function initApp() {
+      document.getElementById('auth-view').classList.add('hidden');
+      document.getElementById('app').classList.remove('hidden');
+      
+      // Setup Header UI
+      const u = State.user;
+      const displayStr = `${escapeHTML(u.symbol)} ${escapeHTML(u.displayName)}`;
+      
+      document.getElementById('mh-name').innerHTML = displayStr;
+      document.getElementById('pc-name').innerHTML = displayStr;
+      
+      const roleEl = document.querySelectorAll('.header-role');
+      roleEl.forEach(el => {
+        el.textContent = u.role;
+        if(u.role === 'OWNER') {
+          el.innerHTML = '👑 OWNER';
+          el.classList.add('role-owner');
+        }
+      });
+
+      if (u.role === 'OWNER') document.getElementById('nav-admin').classList.remove('hidden');
+
+      switchView('home');
+      loadProfile(true); // Load initial stats quietly
+    }
+
+    // ==========================================
+    // 4. AFK SYSTEM
+    // ==========================================
+    function startTimerUI() {
+      if(State.afkInterval) clearInterval(State.afkInterval);
+      document.getElementById('btn-start-afk').classList.add('hidden');
+      document.getElementById('btn-stop-afk').classList.remove('hidden');
+      document.getElementById('afk-status-text').textContent = 'ĐANG AFK';
+      document.getElementById('afk-status-text').style.color = 'var(--success)';
+      
+      State.afkInterval = setInterval(() => {
+        const diff = Date.now() - State.afkStartTime;
+        document.getElementById('afk-timer').textContent = formatTime(diff);
+      }, 1000);
+    }
+
+    function stopTimerUI() {
+      if(State.afkInterval) clearInterval(State.afkInterval);
+      State.afkStartTime = null;
+      document.getElementById('btn-start-afk').classList.remove('hidden');
+      document.getElementById('btn-stop-afk').classList.add('hidden');
+      document.getElementById('afk-status-text').textContent = 'Chưa bắt đầu AFK';
+      document.getElementById('afk-status-text').style.color = 'var(--text-muted)';
+      document.getElementById('afk-timer').textContent = '00:00:00';
+    }
+
+    async function startAFK() {
+      loading(true);
+      const res = await api('startAFK', State.token);
+      loading(false);
+      if(res.success) {
+        State.afkStartTime = res.startTime;
+        startTimerUI();
+        showToast('Đã bắt đầu tính giờ!');
+      } else {
+        showToast(res.message, 'error');
+      }
+    }
+
+    async function stopAFK() {
+      loading(true);
+      const res = await api('stopAFK', State.token);
+      loading(false);
+      if(res.success) {
+        stopTimerUI();
+        showToast('Kết thúc AFK thành công!');
+        loadProfile(true);
+      } else {
+        showToast(res.message, 'error');
+      }
+    }
+
+    async function loadRanking() {
+      const container = document.getElementById('ranking-list');
+      container.innerHTML = '<div class="text-center text-muted">Đang tải...</div>';
+      const res = await api('getAFKRanking', State.token);
+      if(res.success) {
+        container.innerHTML = '';
+        if(res.ranking.length === 0) {
+          container.innerHTML = '<div class="text-center text-muted">Chưa có ai đang AFK.</div>';
+          return;
+        }
+        res.ranking.forEach((u, i) => {
+          let posClass = i === 0 ? 'gold' : i === 1 ? 'silver' : i === 2 ? 'bronze' : '';
+          let roleTag = u.role === 'OWNER' ? '<span class="header-role role-owner" style="font-size:0.6rem;">👑 OWNER</span>' : '';
+          let div = document.createElement('div');
+          div.className = 'rank-item';
+          div.innerHTML = `
+            <div class="flex items-center gap-4">
+              <div class="rank-pos ${posClass}">#${i+1}</div>
+              <div>
+                <div style="font-weight:600;">${escapeHTML(u.symbol)} ${escapeHTML(u.display)} ${roleTag}</div>
+                <div class="text-muted" style="font-size:0.8rem;" class="live-rank-time" data-start="${u.startTime}">
+                  AFK ${formatTime(Date.now() - u.startTime)}
+                </div>
+              </div>
+            </div>
+          `;
+          container.appendChild(div);
+        });
+        
+        // Cập nhật live timer trong bảng xếp hạng
+        setInterval(() => {
+          document.querySelectorAll('.live-rank-time').forEach(el => {
+            let st = parseInt(el.getAttribute('data-start'));
+            el.textContent = `AFK ${formatTime(Date.now() - st)}`;
+          });
+        }, 1000);
+      }
+    }
+
+    // ==========================================
+    // 5. PROFILE & ADMIN
+    // ==========================================
+    async function loadProfile(silent = false) {
+      if(!silent) loading(true);
+      const res = await api('getProfile', State.token);
+      if(!silent) loading(false);
+      
+      if(res.success) {
+        const u = res.user;
+        const s = res.stats;
+        State.bestScore = s.flappyScore || 0;
+        
+        document.getElementById('game-best-score').textContent = State.bestScore;
+        document.getElementById('pro-symbol').textContent = escapeHTML(u.symbol);
+        document.getElementById('pro-display').textContent = escapeHTML(u.displayName);
+        document.getElementById('pro-username').textContent = escapeHTML(u.username);
+        
+        let rEl = document.getElementById('pro-role');
+        rEl.textContent = u.role;
+        if(u.role === 'OWNER') {
+          rEl.innerHTML = '👑 OWNER';
+          rEl.classList.add('role-owner');
+        }
+
+        document.getElementById('edit-display').value = u.displayName;
+        document.getElementById('edit-symbol').value = u.symbol;
+
+        document.getElementById('stat-sessions').textContent = s.totalSessions;
+        document.getElementById('stat-longest').textContent = formatTime(s.longestAFK);
+
+        // Resume AFK Timer if currently AFK
+        if(s.currentAFK && !State.afkStartTime) {
+          State.afkStartTime = s.currentAFK;
+          startTimerUI();
+        } else if (!s.currentAFK && State.afkStartTime) {
+          stopTimerUI();
+        }
+
+        // History
+        let histHtml = '';
+        if(s.history.length === 0) histHtml = 'Chưa có lịch sử.';
+        else {
+          s.history.forEach(h => {
+            let d = new Date(h.start);
+            histHtml += `<div class="flex justify-between" style="padding:8px 0; border-bottom:1px solid var(--glass-border);">
+              <span>${d.toLocaleDateString('vi-VN')}</span>
+              <strong style="color:var(--primary);">${formatTime(h.duration)}</strong>
+            </div>`;
+          });
+        }
+        document.getElementById('profile-history').innerHTML = histHtml;
+      }
+    }
+
+    async function saveProfile() {
+      const d = document.getElementById('edit-display').value.trim();
+      const s = document.getElementById('edit-symbol').value.trim();
+      if(!d || !s) return showToast('Không được để trống', 'error');
+      
+      loading(true);
+      const res = await api('updateProfile', State.token, d, s);
+      loading(false);
+      if(res.success) {
+        showToast(res.message);
+        State.user.displayName = d;
+        State.user.symbol = s;
+        initApp();
+      }
+    }
+
+    async function loadAdminData() {
+      loading(true);
+      const stats = await api('getAdminStats', State.token);
+      if(stats.success) {
+        document.getElementById('ad-users').textContent = stats.stats.users;
+        document.getElementById('ad-afks').textContent = stats.stats.afks;
+        document.getElementById('ad-sessions').textContent = stats.stats.sessions;
+        document.getElementById('ad-games').textContent = stats.stats.games;
+      }
+      loadAdminUsers();
+      loading(false);
+    }
+
+    async function loadAdminUsers() {
+      const tb = document.getElementById('admin-user-list');
+      tb.innerHTML = '<tr><td colspan="3" class="text-center text-muted">Đang tải...</td></tr>';
+      const res = await api('getUsers', State.token);
+      if(res.success) {
+        tb.innerHTML = '';
+        res.users.forEach(u => {
+          let roleTag = u.role === 'OWNER' ? '👑 OWNER' : 'MEMBER';
+          let style = u.role === 'OWNER' ? 'color:#fbbf24' : '';
+          tb.innerHTML += `
+            <tr>
+              <td><div style="font-weight:600">${escapeHTML(u.symbol)} ${escapeHTML(u.displayName)}</div><div style="font-size:0.7rem" class="text-muted">@${escapeHTML(u.username)}</div></td>
+              <td style="${style}; font-size:0.8rem; font-weight:600;">${roleTag}</td>
+              <td>
+                <button onclick="adminStopUserAFK('${u.id}')" style="padding:4px 8px; font-size:0.7rem; width:auto;">Stop AFK</button>
+                ${u.role !== 'OWNER' ? `<button onclick="adminDelUser('${u.id}')" class="danger" style="padding:4px 8px; font-size:0.7rem; width:auto; margin-top:5px;">Xóa</button>` : ''}
+              </td>
+            </tr>
+          `;
+        });
+      }
+    }
+
+    async function adminStopUserAFK(id) {
+      if(!confirm('Dừng AFK user này?')) return;
+      loading(true);
+      const res = await api('adminStopAFK', State.token, id);
+      loading(false);
+      showToast(res.message, res.success ? 'success' : 'error');
+    }
+
+    async function adminDelUser(id) {
+      if(!confirm('Xóa vĩnh viễn user này?')) return;
+      loading(true);
+      const res = await api('adminDeleteUser', State.token, id);
+      loading(false);
+      showToast(res.message, res.success ? 'success' : 'error');
+      loadAdminUsers();
+    }
+
+
+    // ==========================================
+    // 6. FLAPPY BIRD ENGINE (HTML5 CANVAS)
+    // ==========================================
+    const cvs = document.getElementById("flappy-canvas");
+    const ctx = cvs.getContext("2d");
+    
+    let frames = 0;
+    let score = 0;
+    let currentGameState = 0; // 0: Start, 1: Play, 2: Over
+    let reqAnim;
+    let soundEnabled = true;
+
+    // Web Audio API Synth (No external files)
+    const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    function playSound(type) {
+      if(!soundEnabled) return;
+      if(audioCtx.state === 'suspended') audioCtx.resume();
+      const osc = audioCtx.createOscillator();
+      const gain = audioCtx.createGain();
+      osc.connect(gain);
+      gain.connect(audioCtx.destination);
+      
+      if(type === 'flap') {
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(300, audioCtx.currentTime);
+        osc.frequency.exponentialRampToValueAtTime(600, audioCtx.currentTime + 0.1);
+        gain.gain.setValueAtTime(0.1, audioCtx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.1);
+        osc.start(); osc.stop(audioCtx.currentTime + 0.1);
+      } else if (type === 'score') {
+        osc.type = 'square';
+        osc.frequency.setValueAtTime(400, audioCtx.currentTime);
+        osc.frequency.setValueAtTime(600, audioCtx.currentTime + 0.1);
+        gain.gain.setValueAtTime(0.1, audioCtx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.2);
+        osc.start(); osc.stop(audioCtx.currentTime + 0.2);
+      } else if (type === 'hit') {
+        osc.type = 'sawtooth';
+        osc.frequency.setValueAtTime(150, audioCtx.currentTime);
+        osc.frequency.exponentialRampToValueAtTime(50, audioCtx.currentTime + 0.2);
+        gain.gain.setValueAtTime(0.2, audioCtx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.2);
+        osc.start(); osc.stop(audioCtx.currentTime + 0.2);
+      }
+    }
+
+    function toggleSound() {
+      soundEnabled = !soundEnabled;
+      document.getElementById('btn-sound').textContent = soundEnabled ? '🔊 ON' : '🔇 OFF';
+    }
+
+    const bird = {
+      x: 50, y: 150, w: 34, h: 24,
+      gravity: 0.25, jump: -4.6, speed: 0,
+      draw: function() {
+        ctx.fillStyle = "#fbbf24";
+        ctx.beginPath();
+        ctx.arc(this.x + this.w/2, this.y + this.h/2, this.h/2, 0, Math.PI*2);
+        ctx.fill();
+        ctx.fillStyle = "white"; // eye
+        ctx.beginPath();
+        ctx.arc(this.x + this.w/2 + 8, this.y + this.h/2 - 4, 4, 0, Math.PI*2);
+        ctx.fill();
+        ctx.fillStyle = "black";
+        ctx.beginPath();
+        ctx.arc(this.x + this.w/2 + 10, this.y + this.h/2 - 4, 2, 0, Math.PI*2);
+        ctx.fill();
+      },
+      update: function() {
+        this.speed += this.gravity;
+        this.y += this.speed;
+        if(this.y + this.h >= cvs.height - bg.groundH) {
+          this.y = cvs.height - bg.groundH - this.h;
+          gameOver();
+        }
+        if(this.y <= 0) {
+          this.y = 0;
+          this.speed = 0;
+        }
+      },
+      flap: function() {
+        this.speed = this.jump;
+        playSound('flap');
+      },
+      reset: function() { this.y = 150; this.speed = 0; }
+    };
+
+    const pipes = {
+      items: [], w: 50, gap: 110, dx: 2,
+      draw: function() {
+        for(let i=0; i<this.items.length; i++) {
+          let p = this.items[i];
+          ctx.fillStyle = "#84cc16";
+          ctx.fillRect(p.x, 0, this.w, p.top);
+          ctx.fillRect(p.x, cvs.height - p.bottom, this.w, p.bottom);
+          
+          // borders
+          ctx.strokeStyle = "#3f6212";
+          ctx.lineWidth = 2;
+          ctx.strokeRect(p.x, 0, this.w, p.top);
+          ctx.strokeRect(p.x, cvs.height - p.bottom, this.w, p.bottom);
+        }
+      },
+      update: function() {
+        if(frames % 100 == 0) {
+          let minTop = 50;
+          let maxTop = cvs.height - bg.groundH - this.gap - 50;
+          let topH = Math.floor(Math.random() * (maxTop - minTop + 1) + minTop);
+          this.items.push({
+            x: cvs.width,
+            top: topH,
+            bottom: cvs.height - (topH + this.gap),
+            passed: false
+          });
+        }
+        for(let i=0; i<this.items.length; i++) {
+          let p = this.items[i];
+          p.x -= this.dx;
+          
+          // Collision
+          if(bird.x + bird.w > p.x && bird.x < p.x + this.w && 
+             (bird.y < p.top || bird.y + bird.h > cvs.height - p.bottom)) {
+             gameOver();
+          }
+          // Score
+          if(p.x + this.w < bird.x && !p.passed) {
+            score++;
+            p.passed = true;
+            playSound('score');
+            document.getElementById('flappy-score').textContent = score;
+          }
+          if(p.x + this.w < 0) { this.items.shift(); i--; }
+        }
+      },
+      reset: function() { this.items = []; }
+    };
+
+    const bg = {
+      groundH: 50,
+      draw: function() {
+        ctx.fillStyle = "#ded895";
+        ctx.fillRect(0, cvs.height - this.groundH, cvs.width, this.groundH);
+        ctx.fillStyle = "#73bf2e";
+        ctx.fillRect(0, cvs.height - this.groundH, cvs.width, 10);
+      }
+    };
+
+    function draw() {
+      ctx.fillStyle = "#70c5ce"; // Sky
+      ctx.fillRect(0, 0, cvs.width, cvs.height);
+      pipes.draw();
+      bg.draw();
+      bird.draw();
+    }
+
+    function update() {
+      if(currentGameState === 1) {
+        bird.update();
+        pipes.update();
+      }
+    }
+
+    function loop() {
+      update();
+      draw();
+      frames++;
+      if(currentGameState !== 2) {
+        reqAnim = requestAnimationFrame(loop);
+      }
+    }
+
+    function openGame(game) {
+      if(game === 'flappy') {
+        switchView('play');
+        resizeCanvas();
+        currentGameState = 0;
+        score = 0;
+        document.getElementById('flappy-score').classList.add('hidden');
+        document.getElementById('flappy-start').classList.remove('hidden');
+        document.getElementById('flappy-over').classList.add('hidden');
+        bird.reset();
+        pipes.reset();
+        draw(); // draw initial frame
+      }
+    }
+
+    function startGame() {
+      currentGameState = 1;
+      score = 0;
+      frames = 0;
+      bird.reset();
+      pipes.reset();
+      document.getElementById('flappy-score').textContent = "0";
+      document.getElementById('flappy-score').classList.remove('hidden');
+      document.getElementById('flappy-start').classList.add('hidden');
+      document.getElementById('flappy-over').classList.add('hidden');
+      if(reqAnim) cancelAnimationFrame(reqAnim);
+      loop();
+      bird.flap(); // Initial jump
+    }
+
+    async function gameOver() {
+      playSound('hit');
+      currentGameState = 2;
+      document.getElementById('final-score').textContent = score;
+      document.getElementById('flappy-over').classList.remove('hidden');
+      document.getElementById('flappy-score').classList.add('hidden');
+      
+      if(score > State.bestScore) {
+        State.bestScore = score;
+        document.getElementById('game-best-score').textContent = score;
+      }
+      document.getElementById('over-best-score').textContent = State.bestScore;
+      
+      // Save score background
+      if(score > 0) {
+        api('saveGameScore', State.token, 'FlappyBird', score);
+      }
+    }
+
+    // Input handlers
+    const triggerFlap = (e) => {
+      if(currentGameState === 1) {
+        e.preventDefault();
+        bird.flap();
+      }
+    };
+    
+    cvs.addEventListener('touchstart', triggerFlap, {passive: false});
+    cvs.addEventListener('mousedown', triggerFlap);
+    document.addEventListener('keydown', (e) => {
+      if((e.code === 'Space' || e.code === 'ArrowUp') && currentGameState === 1 && document.getElementById('view-play').classList.contains('hidden') === false) {
+        triggerFlap(e);
+      }
+    });
+
+    // Resize handling
+    function resizeCanvas() {
+      const container = document.getElementById('game-container');
+      const cw = container.clientWidth;
+      cvs.width = cw;
+      cvs.height = 500; // Fixed height logic
+    }
+    window.addEventListener('resize', () => {
+      if(!document.getElementById('view-play').classList.contains('hidden')) {
+        resizeCanvas();
+        draw();
+      }
+    });
+
+  </script>
+</body>
+</html>
